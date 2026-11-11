@@ -182,3 +182,12 @@ test('registration rejects short passwords and malformed email addresses', async
   }), {});
   assert.equal(response.status, 400);
 });
+
+test('administrative data endpoint rejects requests without an admin session', async () => {
+  const response = await worker.fetch(
+    new Request('https://example.test/api/admin/data'),
+    {}
+  );
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'سجّل دخول الإدارة.' });
+});
