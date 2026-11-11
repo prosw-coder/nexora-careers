@@ -10,6 +10,10 @@
 - `src/worker.js` — نقطة دخول منظمة تستورد صفحات الواجهة من الوحدة المنفصلة.
 - `src/frontend/public-page.js` — صفحة الموقع العامة.
 - `src/frontend/admin-page.js` — صفحة لوحة الإدارة.
+- `src/backend/auth-api.js` — إنشاء الحساب وتسجيل الدخول والخروج.
+- `src/backend/public-api.js` — عرض الوظائف والدورات والتفاصيل.
+- `src/backend/account-api.js` — الملف الشخصي والدعم والاشتراكات والتقديم.
+- `src/backend/admin-api.js` — واجهات لوحة الإدارة.
 - الموقع المنشور: https://nexora-careers.m7njordan.workers.dev/
 - لوحة الإدارة: https://nexora-careers.m7njordan.workers.dev/admin
 
