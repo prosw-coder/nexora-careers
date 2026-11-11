@@ -14,4 +14,4 @@ const publicReadResponse=await handlePublicReadApi(p,m,r,e);if(publicReadRespons
 const accountResponse=await handleAccountApi(p,m,r,e);if(accountResponse)return accountResponse;
 const adminResponse=await handleAdminApi(p,m,r,e);if(adminResponse)return adminResponse;
 return J({error:'المسار غير موجود.'},404)}
-export default {async fetch(req,env){try{return await route(req,env)}catch(err){const p=new URL(req.url).pathname;return J({error:'خطأ داخلي في الخادم.',detail:(p==='/api/register'||p==='/api/login')?String(err):undefined},500)}}};
+export default {async fetch(req,env){try{return await route(req,env)}catch(err){const p=new URL(req.url).pathname;return J({error:'خطأ داخلي في الخادم.'},500)}}};
