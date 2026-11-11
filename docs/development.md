@@ -22,7 +22,7 @@ npm run check
 npm test
 ```
 
-The smoke tests cover the health route, public and admin HTML responses, unknown-route handling, free-tier job/course visibility, and unauthenticated job-detail access. They do not mutate production D1 data.
+The smoke tests cover health and HTML routes, free-tier visibility, authentication requirements, registration/login/logout using an in-memory D1 test double, and input validation. They do not connect to or mutate production D1 data.
 
 ## Production safety
 
