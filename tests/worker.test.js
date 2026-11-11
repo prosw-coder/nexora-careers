@@ -117,6 +117,12 @@ test('registration creates a user and session, login verifies the password, logo
           if (sql.includes('WHERE email=?') && sql.startsWith('SELECT id FROM users')) {
             return users.find(user => user.email === params[0]) || null;
           }
+          if (sql.includes('FROM sessions WHERE token=?')) {
+            return sessions.find(session => session.token === params[0]) || null;
+          }
+          if (sql.includes('FROM users WHERE id=?')) {
+            return users.find(user => user.id === params[0]) || null;
+          }
           if (sql.includes('WHERE account_id=?')) {
             return users.find(user => user.account_id === params[0]) || null;
           }
@@ -167,6 +173,11 @@ test('registration creates a user and session, login verifies the password, logo
   }), env);
   assert.equal(wrongPassword.status, 401);
   const token = register.headers.get('set-cookie').match(/nxsession=([^;]+)/)[1];
+  const me = await worker.fetch(new Request('https://example.test/api/me', {
+    headers: { cookie: `nxsession=${token}` }
+  }), env);
+  assert.equal(me.status, 200);
+  assert.equal((await me.json()).user.email, 'test@example.com');
 
   const login = await worker.fetch(new Request('https://example.test/api/login', {
     method: 'POST',
