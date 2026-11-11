@@ -2,26 +2,35 @@
 
 ## Current production shape
 
-The deployed application is a single Cloudflare Worker module. The module embeds the HTML page and admin interface as source strings and routes HTTP requests to page and API handlers.
+The deployed application remains a single Cloudflare Worker module. The repository now contains a source-only modularization branch on `main`; it has not been deployed to production.
+
+## Source layout
+
+- `worker/worker.js`: immutable-in-practice snapshot of the Worker source at the start of the GitHub migration.
+- `src/worker.js`: modular Worker entry point; imports the page documents and backend helpers.
+- `src/frontend/page.js`: public page and admin HTML documents.
+- `src/backend/utils.js`: JSON response, request parsing, cookie, ID, time, and password-hashing helpers.
+- `src/backend/auth.js`: session lookup and plan entitlement checks.
 
 ## Bound resources
 
-The deployed Worker uses these bindings:
+The deployed Worker uses:
 
-- `DB`: Cloudflare D1 database.
-- `STORE`: Cloudflare KV namespace.
+- `DB`: Cloudflare D1.
+- `STORE`: Cloudflare KV.
 
-The Git repository intentionally stores source code only. D1 rows, KV values, account identifiers, and secret values are not application source files and must not be copied into Git.
+The repository intentionally stores source code only. D1 rows, KV values, account identifiers, and secret values must not be committed.
 
-## Refactoring approach
+## API route inventory
 
-Keep the deployed Worker as the behavioral reference while extracting code in small, reviewable steps:
+The current entry point includes routes for health, authentication, user profile, public jobs/courses, applications, support, plan requests, and administrative job/course/announcement/plan/team operations. See the literal route checks in `src/worker.js` for the current implementation.
 
-1. Inventory all route handlers and frontend entry points.
-2. Separate static page markup/styles/scripts from the request router.
-3. Extract API route groups and shared validation/response helpers.
-4. Add tests for authentication, public data, profiles, jobs, courses, and applications.
-5. Verify the D1 schema and bindings before any deployment change.
-6. Deploy only after regression checks pass.
+## Safe refactoring approach
 
-Do not change production database schema or data as part of source-only refactoring.
+1. Keep `worker/worker.js` as a recovery reference.
+2. Extract frontend and backend modules without changing behavior.
+3. Add automated tests for login, registration, sessions, public data, profiles, jobs, courses, and applications.
+4. Verify the D1 schema and bindings before any deployment change.
+5. Compare the modular worker behavior against production before switching the deployed entry point.
+
+No production database schema or data was changed as part of this source-only refactor.
