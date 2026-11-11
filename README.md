@@ -8,7 +8,8 @@
 
 - `worker/worker.js` — نسخة مرجعية محفوظة من Worker الإنتاج كما كانت عند بدء النقل.
 - `src/worker.js` — نقطة دخول منظمة تستورد صفحات الواجهة من الوحدة المنفصلة.
-- `src/frontend/page.js` — HTML الواجهة العامة ولوحة الإدارة في وحدة مستقلة.
+- `src/frontend/public-page.js` — صفحة الموقع العامة.
+- `src/frontend/admin-page.js` — صفحة لوحة الإدارة.
 - الموقع المنشور: https://nexora-careers.m7njordan.workers.dev/
 - لوحة الإدارة: https://nexora-careers.m7njordan.workers.dev/admin
 
