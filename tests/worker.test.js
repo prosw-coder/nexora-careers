@@ -223,3 +223,20 @@ test('administrative data endpoint rejects requests without an admin session', a
   assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: 'سجّل دخول الإدارة.' });
 });
+
+test('admin rejects non-HTTP(S) links before writing to the database', async () => {
+  const env = { STORE: { async get() { return 'ok'; } } };
+  const cases = [
+    ['/api/admin/job', { title: 'Job', official_url: 'javascript:alert(1)' }],
+    ['/api/admin/course', { title: 'Course', url: 'data:text/html,hello' }],
+    ['/api/admin/announcement', { title: 'Announcement', link_url: 'ftp://example.test/file' }]
+  ];
+  for (const [path, payload] of cases) {
+    const response = await worker.fetch(new Request(`https://example.test${path}`, {
+      method: 'POST',
+      headers: { cookie: 'nxadmin=test-token', 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    }), env);
+    assert.equal(response.status, 400, path);
+  }
+});
