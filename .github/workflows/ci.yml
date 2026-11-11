@@ -1,10 +1,15 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+concurrency:
+  group: nexora-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   checks:
