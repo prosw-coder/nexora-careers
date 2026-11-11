@@ -17,7 +17,7 @@ test('public homepage serves Arabic RTL HTML', async () => {
   assert.match(response.headers.get('content-type') || '', /text\/html/);
   assert.match(html, /lang="ar"/);
   assert.match(html, /dir="rtl"/);
-  assert.match(html, /NEXORA Admin/);
+  assert.match(html, /NEXORA CAREERS/);
 });
 
 test('admin page serves HTML', async () => {
@@ -25,7 +25,7 @@ test('admin page serves HTML', async () => {
   const html = await response.text();
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type') || '', /text\/html/);
-  assert.match(html, /NEXORA CAREERS/);
+  assert.match(html, /NEXORA Admin/);
 });
 
 test('unknown routes return a JSON 404', async () => {
@@ -76,4 +76,31 @@ test('job details require an authenticated session', async () => {
   );
   assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: 'سجّل الدخول أولاً لعرض التفاصيل.' });
+});
+
+test('support endpoint validates input before database access', async () => {
+  const response = await worker.fetch(
+    new Request('https://example.test/api/support', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: '', email: 'invalid', message: 'short' })
+    }),
+    {}
+  );
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    error: 'أدخل الاسم والبريد ورسالة من 8 أحرف على الأقل.'
+  });
+});
+
+test('profile updates require authentication', async () => {
+  const response = await worker.fetch(
+    new Request('https://example.test/api/profile', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Test User' })
+    }),
+    {}
+  );
+  assert.equal(response.status, 401);
 });
