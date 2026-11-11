@@ -196,6 +196,14 @@ test('registration creates a user and session, login verifies the password, logo
   assert.equal(logout.status, 200);
   assert.equal(sessions.length, 1);
   assert.match(logout.headers.get('set-cookie'), /Max-Age=0/);
+
+  sessions.push({ token: 'expired-session', user_id: registered.user.id, expires_at: Date.now() - 1000 });
+  const expired = await worker.fetch(new Request('https://example.test/api/me', {
+    headers: { cookie: 'nxsession=expired-session' }
+  }), env);
+  assert.equal(expired.status, 200);
+  assert.deepEqual(await expired.json(), { user: null });
+  assert.equal(sessions.some(session => session.token === 'expired-session'), false);
 });
 
 test('registration rejects short passwords and malformed email addresses', async () => {
