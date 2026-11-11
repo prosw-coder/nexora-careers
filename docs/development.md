@@ -22,7 +22,7 @@ npm run check
 npm test
 ```
 
-The 11 smoke tests cover health and HTML routes, free-tier visibility, authentication requirements, registration/login/logout using an in-memory D1 test double, duplicate registration, incorrect passwords, authenticated profile lookup, expired-session cleanup, and input validation. They do not connect to or mutate production D1 data.
+The 12 smoke tests cover health and HTML routes, free-tier visibility, authentication requirements, registration/login/logout using an in-memory D1 test double, duplicate registration, incorrect passwords, authenticated profile lookup, expired-session cleanup, input validation, and rejection of unsafe administrative URLs. They do not connect to or mutate production D1 data.
 
 GitHub Actions is configured to run these checks on pushes and can be started manually. At the latest review, GitHub had accepted the workflow runs but left them queued; no successful or failed test result was available. Do not treat the suite as passed until a run completes.
 
