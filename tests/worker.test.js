@@ -104,3 +104,81 @@ test('profile updates require authentication', async () => {
   );
   assert.equal(response.status, 401);
 });
+
+test('registration creates a user and session, login verifies the password, logout clears it', async () => {
+  const users = [];
+  const sessions = [];
+  const db = {
+    prepare(sql) {
+      let params = [];
+      return {
+        bind(...values) { params = values; return this; },
+        async first() {
+          if (sql.includes('WHERE email=?') && sql.startsWith('SELECT id FROM users')) {
+            return users.find(user => user.email === params[0]) || null;
+          }
+          if (sql.includes('WHERE account_id=?')) {
+            return users.find(user => user.account_id === params[0]) || null;
+          }
+          if (sql.includes('WHERE email=?') && sql.startsWith('SELECT id,account_id')) {
+            return users.find(user => user.email === params[0]) || null;
+          }
+          return null;
+        },
+        async run() {
+          if (sql.startsWith('INSERT INTO users')) {
+            const [id, account_id, name, email, password_hash, salt, avatar, theme, plan, plan_status, created_at] = params;
+            users.push({ id, account_id, name, email, password_hash, salt, avatar, theme, plan, plan_status, plan_expires_at: null, team_owner_id: null, team_members: '[]', created_at });
+          } else if (sql.startsWith('INSERT INTO sessions')) {
+            const [token, user_id, expires_at, created_at] = params;
+            sessions.push({ token, user_id, expires_at, created_at });
+          } else if (sql.startsWith('DELETE FROM sessions')) {
+            const index = sessions.findIndex(session => session.token === params[0]);
+            if (index >= 0) sessions.splice(index, 1);
+          }
+          return { success: true };
+        }
+      };
+    }
+  };
+  const env = { DB: db };
+  const register = await worker.fetch(new Request('https://example.test/api/register', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Test User', email: 'TEST@example.com', password: 'password123', avatar: 'avatar1' })
+  }), env);
+  assert.equal(register.status, 201);
+  const registered = await register.json();
+  assert.equal(registered.user.email, 'test@example.com');
+  assert.match(registered.user.account_id, /^\d{10}$/);
+  assert.equal('password_hash' in registered.user, false);
+  assert.equal(sessions.length, 1);
+  const token = register.headers.get('set-cookie').match(/nxsession=([^;]+)/)[1];
+
+  const login = await worker.fetch(new Request('https://example.test/api/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'test@example.com', password: 'password123' })
+  }), env);
+  assert.equal(login.status, 200);
+  assert.equal((await login.json()).user.id, registered.user.id);
+  assert.equal(sessions.length, 2);
+
+  const logout = await worker.fetch(new Request('https://example.test/api/logout', {
+    method: 'POST',
+    headers: { cookie: `nxsession=${token}`, 'content-type': 'application/json' },
+    body: '{}'
+  }), env);
+  assert.equal(logout.status, 200);
+  assert.equal(sessions.length, 1);
+  assert.match(logout.headers.get('set-cookie'), /Max-Age=0/);
+});
+
+test('registration rejects short passwords and malformed email addresses', async () => {
+  const response = await worker.fetch(new Request('https://example.test/api/register', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Test User', email: 'not-an-email', password: 'short' })
+  }), {});
+  assert.equal(response.status, 400);
+});
