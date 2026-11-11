@@ -40,3 +40,5 @@ No production database schema or data was changed as part of this source-only re
 ## Public API module
 
 - `src/backend/public-api.js`: authenticated session lookup, public job/course catalog response, and job/course detail reads. The Worker entry point delegates these read routes to this module. Other write routes remain in the entry point until they are separated and tested individually.
+
+- `src/backend/account-api.js`: profile updates, support requests, subscription requests, team membership, and job applications.
