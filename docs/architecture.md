@@ -12,6 +12,10 @@ The deployed application remains a single Cloudflare Worker module. The reposito
 - `src/frontend/admin-page.js`: administration dashboard HTML document.
 - `src/backend/utils.js`: JSON response, request parsing, cookie, ID, time, and password-hashing helpers.
 - `src/backend/auth.js`: session lookup and plan entitlement checks.
+- `src/backend/auth-api.js`: account registration, login, and logout with D1-backed sessions.
+- `src/backend/public-api.js`: public data, current-user profile retrieval, and job/course detail reads.
+- `src/backend/account-api.js`: profile updates, support, subscriptions, team membership, and applications.
+- `src/backend/admin-api.js`: admin login, authorization, data reads, and management actions.
 
 ## Bound resources
 
@@ -24,7 +28,7 @@ The repository intentionally stores source code only. D1 rows, KV values, accoun
 
 ## API route inventory
 
-The current entry point includes routes for health, authentication, user profile, public jobs/courses, applications, support, plan requests, and administrative job/course/announcement/plan/team operations. See the literal route checks in `src/worker.js` for the current implementation.
+The modular entry point delegates authentication, public reads, account writes, and administrative operations to dedicated backend modules.
 
 ## Safe refactoring approach
 
@@ -39,6 +43,6 @@ No production database schema or data was changed as part of this source-only re
 
 ## Public API module
 
-- `src/backend/public-api.js`: authenticated session lookup, public job/course catalog response, and job/course detail reads. The Worker entry point delegates these read routes to this module. Other write routes remain in the entry point until they are separated and tested individually.
+- `src/backend/public-api.js`: authenticated session lookup, public job/course catalog response, and job/course detail reads. The Worker entry point delegates public read routes to this module.
 
 - `src/backend/account-api.js`: profile updates, support requests, subscription requests, team membership, and job applications.
