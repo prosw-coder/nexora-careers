@@ -147,7 +147,7 @@ test('registration creates a user and session, login verifies the password, logo
       };
     }
   };
-  const env = { DB: db };
+  const env = { DB: db, STORE: { async get() { return null; }, async put() {} } };
   const register = await worker.fetch(new Request('https://example.test/api/register', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
