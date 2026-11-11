@@ -1,0 +1,15 @@
+{
+  "name": "nexora-careers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "NEXORA CAREERS recruitment platform on Cloudflare Workers",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "node --test",
+    "check": "node --check src/worker.js && node --check src/backend/utils.js && node --check src/backend/auth.js && node --check src/frontend/page.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
