@@ -153,6 +153,19 @@ test('registration creates a user and session, login verifies the password, logo
   assert.match(registered.user.account_id, /^\d{10}$/);
   assert.equal('password_hash' in registered.user, false);
   assert.equal(sessions.length, 1);
+  const duplicate = await worker.fetch(new Request('https://example.test/api/register', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Another User', email: 'test@example.com', password: 'password123', avatar: 'avatar1' })
+  }), env);
+  assert.equal(duplicate.status, 409);
+
+  const wrongPassword = await worker.fetch(new Request('https://example.test/api/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'test@example.com', password: 'incorrect-password' })
+  }), env);
+  assert.equal(wrongPassword.status, 401);
   const token = register.headers.get('set-cookie').match(/nxsession=([^;]+)/)[1];
 
   const login = await worker.fetch(new Request('https://example.test/api/login', {
