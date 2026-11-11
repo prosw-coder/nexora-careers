@@ -35,3 +35,8 @@ The current entry point includes routes for health, authentication, user profile
 5. Compare the modular worker behavior against production before switching the deployed entry point.
 
 No production database schema or data was changed as part of this source-only refactor.
+
+
+## Public API module
+
+- `src/backend/public-api.js`: authenticated session lookup, public job/course catalog response, and job/course detail reads. The Worker entry point delegates these read routes to this module. Other write routes remain in the entry point until they are separated and tested individually.
