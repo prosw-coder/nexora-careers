@@ -8,7 +8,8 @@ The deployed application remains a single Cloudflare Worker module. The reposito
 
 - `worker/worker.js`: immutable-in-practice snapshot of the Worker source at the start of the GitHub migration.
 - `src/worker.js`: modular Worker entry point; imports the page documents and backend helpers.
-- `src/frontend/page.js`: public page and admin HTML documents.
+- `src/frontend/public-page.js`: public application HTML document.
+- `src/frontend/admin-page.js`: administration dashboard HTML document.
 - `src/backend/utils.js`: JSON response, request parsing, cookie, ID, time, and password-hashing helpers.
 - `src/backend/auth.js`: session lookup and plan entitlement checks.
 
