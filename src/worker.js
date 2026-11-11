@@ -1,4 +1,5 @@
-import { PAGE, ADMIN } from './frontend/page.js';
+import { PAGE } from './frontend/public-page.js';
+import { ADMIN } from './frontend/admin-page.js';
 import { J, id, now, ck, B, sc, H } from './backend/utils.js';
 import { U, P } from './backend/auth.js';
 async function route(r,e){const u=new URL(r.url),p=u.pathname,m=r.method;
