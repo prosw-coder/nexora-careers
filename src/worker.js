@@ -1,9 +1,6 @@
 import { PAGE, ADMIN } from './frontend/page.js';
-const J=(d,s=200,h={})=>new Response(JSON.stringify(d),{status:s,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...h}});
-const id=()=>crypto.randomUUID(),now=()=>Date.now(),ck=(r,n)=>(r.headers.get('Cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(n+'='))?.slice(n.length+1),B=async r=>{try{return await r.json()}catch{return {}}},sc=(n,v,t)=>n+'='+v+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age='+t;
-async function H(p,s){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),'PBKDF2',false,['deriveBits']),b=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(s),iterations:100000,hash:'SHA-256'},k,256);return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function U(r,e){const t=ck(r,'nxsession');if(!t)return null;const s=await e.DB.prepare('SELECT user_id,expires_at FROM sessions WHERE token=?').bind(t).first();if(!s||s.expires_at<=now()){if(s)await e.DB.prepare('DELETE FROM sessions WHERE token=?').bind(t).run();return null}return await e.DB.prepare('SELECT id,account_id,name,email,avatar,theme,plan,plan_status,plan_expires_at,team_owner_id,team_members FROM users WHERE id=?').bind(s.user_id).first()}
-const P=u=>u&&u.plan_status==='active'&&['plus','team'].includes(u.plan)&&(!u.plan_expires_at||u.plan_expires_at>now());
+import { J, id, now, ck, B, sc, H } from './backend/utils.js';
+import { U, P } from './backend/auth.js';
 async function route(r,e){const u=new URL(r.url),p=u.pathname,m=r.method;
 if(p==='/'&&m==='GET')return new Response(PAGE,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
 if(p==='/admin'&&m==='GET')return new Response(ADMIN,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
