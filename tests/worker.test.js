@@ -17,7 +17,7 @@ test('public homepage serves Arabic RTL HTML', async () => {
   assert.match(response.headers.get('content-type') || '', /text\/html/);
   assert.match(html, /lang="ar"/);
   assert.match(html, /dir="rtl"/);
-  assert.match(html, /NEXORA CAREERS/);
+  assert.match(html, /NEXORA Admin/);
 });
 
 test('admin page serves HTML', async () => {
