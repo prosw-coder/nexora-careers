@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "test": "node --test",
-    "check": "node --check src/worker.js && node --check src/backend/utils.js && node --check src/backend/auth.js && node --check src/frontend/public-page.js && node --check src/frontend/admin-page.js && node --check src/backend/public-api.js && node --check src/backend/account-api.js && node -e \"import('./src/worker.js')\""
+    "check": "node --check src/worker.js && node --check src/backend/utils.js && node --check src/backend/auth.js && node --check src/frontend/public-page.js && node --check src/frontend/admin-page.js && node --check src/backend/public-api.js && node --check src/backend/account-api.js && node --check src/backend/admin-api.js && node --check src/backend/auth-api.js && node -e \"import('./src/worker.js')\""
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
