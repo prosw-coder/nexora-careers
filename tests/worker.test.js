@@ -70,7 +70,7 @@ test('public data exposes four rotating free jobs and two free courses', async (
   );
   const data = await response.json();
   assert.equal(response.status, 200);
-  assert.equal(data.job_count, 4);
+  assert.equal(data.job_count, 5);
   assert.equal(data.jobs.filter(item => !item.locked).length, 4);
   assert.equal(data.jobs.filter(item => item.locked).length, 1);
   assert.deepEqual(data.courses.map(item => item.locked), [false, false, true, true]);
