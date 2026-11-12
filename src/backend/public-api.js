@@ -36,7 +36,7 @@ async function handlePublicReadApi(p, m, r, e) {
     });
     if (!paid) jobs.sort((a, b) => Number(!!a.locked) - Number(!!b.locked));
     const c = await e.DB.prepare('SELECT id,title,provider,description,url FROM courses WHERE is_published=1 ORDER BY created_at DESC').all();
-    const courses = (c.results || []).map((x, i) => paid ? ({ ...x, locked: false }) : i < 3 ? ({ ...x, locked: false }) : ({ id: x.id, title: x.title, locked: true }));
+    const courses = (c.results || []).map((x, i) => paid ? ({ ...x, locked: false }) : i < 2 ? ({ ...x, locked: false }) : ({ id: x.id, title: x.title, locked: true }));
     const news = await e.DB.prepare('SELECT id,title,body,image_url,link_url FROM announcements WHERE is_published=1 ORDER BY created_at DESC').all();
     return J({ jobs, job_count: jobs.length, courses, announcements: news.results || [] });
   }
@@ -56,7 +56,7 @@ async function handlePublicReadApi(p, m, r, e) {
     if (!c) return J({ error: 'الدورة غير موجودة.' }, 404);
     if (!P(me)) {
       const rows = await e.DB.prepare('SELECT id FROM courses WHERE is_published=1 ORDER BY created_at DESC').all();
-      if ((rows.results || []).findIndex(x => x.id === cid) >= 3) return J({ error: 'هذه التفاصيل متاحة للمشتركين. فعّل اشتراك Plus أو Team لعرضها.', upgrade_required: true }, 403);
+      if ((rows.results || []).findIndex(x => x.id === cid) >= 2) return J({ error: 'هذه التفاصيل متاحة للمشتركين. فعّل اشتراك Plus أو Team لعرضها.', upgrade_required: true }, 403);
     }
     return J({ course: c });
   }
