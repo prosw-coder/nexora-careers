@@ -66,7 +66,7 @@ async function handleAccountApi(p, m, r, e) {
     const b = await B(r);
     if (!['plus', 'team'].includes(b.plan)) return J({ error: 'الباقة غير صحيحة.' }, 400);
     if (await e.DB.prepare("SELECT id FROM plan_requests WHERE user_id=? AND plan=? AND status='pending'").bind(me.id, b.plan).first()) return J({ error: 'لديك طلب قيد المراجعة.' }, 409);
-    await e.DB.prepare('INSERT INTO plan_requests(id,user_id,plan,price_jod,status,created_at) VALUES(?,?,?,?,?,?)').bind(id(), me.id, b.plan, b.plan === 'plus' ? 5 : 12, 'pending', now()).run();
+    await e.DB.prepare('INSERT INTO plan_requests(id,user_id,plan,price_jod,status,created_at) VALUES(?,?,?,?,?,?)').bind(id(), me.id, b.plan, b.plan === 'plus' ? 5 : 10, 'pending', now()).run();
     return J({ ok: true });
   }
   if (p === '/api/team/lookup' && m === 'POST') {
