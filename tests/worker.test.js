@@ -255,3 +255,13 @@ test('admin rejects non-HTTP(S) links before writing to the database', async () 
     assert.equal(response.status, 400, path);
   }
 });
+
+test('public page inline JavaScript parses before browser execution', async () => {
+  const { PAGE } = await import('../src/frontend/public-page.js');
+  const start = PAGE.indexOf('<script>');
+  const end = PAGE.indexOf('</script>', start + 8);
+  assert.notEqual(start, -1, 'public page script tag must exist');
+  assert.notEqual(end, -1, 'public page script must close');
+  const script = PAGE.slice(start + 8, end);
+  assert.doesNotThrow(() => new Function(script), 'public page inline JavaScript must be syntactically valid');
+});
