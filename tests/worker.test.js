@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import worker from '../src/worker.js';
+import { weeklyFreeJobIds } from '../src/backend/public-api.js';
 
 const env = {};
 
@@ -41,8 +42,8 @@ test('unknown routes return a JSON 404', async () => {
   assert.deepEqual(await response.json(), { error: 'المسار غير موجود.' });
 });
 
-test('public data exposes only the first three free jobs and courses', async () => {
-  const jobs = Array.from({ length: 4 }, (_, i) => ({
+test('public data exposes four rotating free jobs and two free courses', async () => {
+  const jobs = Array.from({ length: 5 }, (_, i) => ({
     id: `job-${i + 1}`, title: `Job ${i + 1}`, company: 'Example',
     location: 'Amman', category: 'Technology', job_type: 'Full-time',
     icon: 'briefcase', is_featured: 0, salary: 'Confidential'
@@ -70,14 +71,16 @@ test('public data exposes only the first three free jobs and courses', async () 
   const data = await response.json();
   assert.equal(response.status, 200);
   assert.equal(data.job_count, 4);
-  assert.deepEqual(data.jobs.map(item => item.locked), [false, false, false, true]);
-  assert.deepEqual(data.courses.map(item => item.locked), [false, false, false, true]);
-  assert.equal(data.jobs[3].salary, undefined);
-  assert.equal(data.courses[3].url, undefined);
+  assert.equal(data.jobs.filter(item => !item.locked).length, 4);
+  assert.equal(data.jobs.filter(item => item.locked).length, 1);
+  assert.deepEqual(data.courses.map(item => item.locked), [false, false, true, true]);
+  const lockedJob = data.jobs.find(item => item.locked);
+  assert.equal(lockedJob.salary, undefined);
+  assert.equal(data.courses[2].url, undefined);
 });
 
-test('first three published job details are public and later details require a subscription', async () => {
-  const jobs = Array.from({ length: 4 }, (_, i) => ({ id: `job-${i + 1}`, title: `Job ${i + 1}` }));
+test('four rotating published job details are public and remaining details require a subscription', async () => {
+  const jobs = Array.from({ length: 5 }, (_, i) => ({ id: `job-${i + 1}`, title: `Job ${i + 1}` }));
   const db = {
     prepare(sql) {
       let selectedId = null;
@@ -92,7 +95,8 @@ test('first three published job details are public and later details require a s
   assert.equal(free.status, 200);
   assert.equal((await free.json()).job.id, 'job-1');
 
-  const locked = await worker.fetch(new Request('https://example.test/api/job/job-4'), { DB: db });
+  const lockedId = jobs.find(job => !weeklyFreeJobIds(jobs).has(job.id)).id;
+  const locked = await worker.fetch(new Request(`https://example.test/api/job/${lockedId}`), { DB: db });
   assert.equal(locked.status, 403);
   assert.equal((await locked.json()).upgrade_required, true);
 });
@@ -166,7 +170,7 @@ test('registration creates a user and session, login verifies the password, logo
       };
     }
   };
-  const env = { DB: db, STORE: { async get() { return null; }, async put() {} } };
+  const env = { DB: db, STORE: { async get() { return null; }, async put() {}, async delete() {} } };
   const register = await worker.fetch(new Request('https://example.test/api/register', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -230,7 +234,7 @@ test('registration rejects short passwords and malformed email addresses', async
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ name: 'Test User', email: 'not-an-email', password: 'short' })
-  }), {});
+  }), { STORE: { async get() { return null; }, async put() {} } });
   assert.equal(response.status, 400);
 });
 
