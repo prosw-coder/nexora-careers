@@ -1,5 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import worker from '../src/worker.js';
 
 const env = {};
@@ -263,5 +267,8 @@ test('public page inline JavaScript parses before browser execution', async () =
   assert.notEqual(start, -1, 'public page script tag must exist');
   assert.notEqual(end, -1, 'public page script must close');
   const script = PAGE.slice(start + 8, end);
-  assert.doesNotThrow(() => new Function(script), 'public page inline JavaScript must be syntactically valid');
+  const file = join(tmpdir(), 'nexora-public-inline.js');
+  writeFileSync(file, script);
+  const check = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+  assert.equal(check.status, 0, check.stderr || check.stdout || 'public page inline JavaScript must be syntactically valid');
 });
