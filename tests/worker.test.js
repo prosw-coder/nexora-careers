@@ -18,6 +18,9 @@ test('public homepage serves Arabic RTL HTML', async () => {
   assert.match(html, /lang="ar"/);
   assert.match(html, /dir="rtl"/);
   assert.match(html, /NEXORA CAREERS/);
+  for (const id of ['account', 'authForm', 'authSubmit', 'jobModal', 'jobDetail', 'upgradeModal']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
 });
 
 test('admin page serves HTML', async () => {
@@ -69,13 +72,25 @@ test('public data exposes only the first three free jobs and courses', async () 
   assert.equal(data.courses[3].url, undefined);
 });
 
-test('job details require an authenticated session', async () => {
-  const response = await worker.fetch(
-    new Request('https://example.test/api/job/job-1'),
-    {}
-  );
-  assert.equal(response.status, 401);
-  assert.deepEqual(await response.json(), { error: 'سجّل الدخول أولاً لعرض التفاصيل.' });
+test('first three published job details are public and later details require a subscription', async () => {
+  const jobs = Array.from({ length: 4 }, (_, i) => ({ id: `job-${i + 1}`, title: `Job ${i + 1}` }));
+  const db = {
+    prepare(sql) {
+      let selectedId = null;
+      return {
+        bind(value) { selectedId = value; return this; },
+        async first() { return sql.includes('FROM jobs') ? jobs.find(job => job.id === selectedId) || null : null; },
+        async all() { return sql.includes('FROM jobs') ? { results: jobs } : { results: [] }; }
+      };
+    }
+  };
+  const free = await worker.fetch(new Request('https://example.test/api/job/job-1'), { DB: db });
+  assert.equal(free.status, 200);
+  assert.equal((await free.json()).job.id, 'job-1');
+
+  const locked = await worker.fetch(new Request('https://example.test/api/job/job-4'), { DB: db });
+  assert.equal(locked.status, 403);
+  assert.equal((await locked.json()).upgrade_required, true);
 });
 
 test('support endpoint validates input before database access', async () => {
