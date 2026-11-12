@@ -4,6 +4,13 @@ import { J, id, now, ck, B, sc, H } from './utils.js';
 const SESSION_TTL = 30 * 24 * 60 * 60;
 const AVATARS = new Set(['avatar1','avatar2','avatar3','avatar4','male1','male2','female1','female2','👨🏻','👨🏽','👩🏻','👩🏽']);
 
+async function allowAttempt(e, key, max, ttl) {
+  const count = Number(await e.STORE.get(key) || 0);
+  if (count >= max) return false;
+  await e.STORE.put(key, String(count + 1), { expirationTtl: ttl });
+  return true;
+}
+
 function safeUser(row) {
   return {
     id: row.id, account_id: row.account_id, name: row.name, email: row.email,
@@ -15,6 +22,8 @@ function safeUser(row) {
 
 async function handleAuthApi(p, m, r, e) {
   if (p === '/api/register' && m === 'POST') {
+    const ip = r.headers.get('CF-Connecting-IP') || 'unknown';
+    if (!await allowAttempt(e, 'auth:register:' + ip, 8, 3600)) return J({ error: 'وصلت إلى الحد المؤقت لإنشاء الحسابات من هذا الاتصال. حاول لاحقاً.' }, 429);
     const b = await B(r), name = String(b.name || '').trim().slice(0, 90);
     const email = String(b.email || '').trim().toLowerCase().slice(0, 160);
     const password = String(b.password || ''), avatar = String(b.avatar || 'avatar1');
@@ -36,10 +45,18 @@ async function handleAuthApi(p, m, r, e) {
     return J({ ok: true, user }, 201, { 'set-cookie': sc('nxsession', token, SESSION_TTL) });
   }
   if (p === '/api/login' && m === 'POST') {
+    const ip = r.headers.get('CF-Connecting-IP') || 'unknown';
+    const rateKey = 'auth:login:' + ip;
+    if (Number(await e.STORE.get(rateKey) || 0) >= 10) return J({ error: 'محاولات تسجيل دخول كثيرة. حاول بعد 15 دقيقة.' }, 429);
     const b = await B(r), email = String(b.email || '').trim().toLowerCase().slice(0, 160), password = String(b.password || '');
     if (!email || !password || password.length > 128) return J({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' }, 401);
     const row = await e.DB.prepare('SELECT id,account_id,name,email,password_hash,salt,avatar,theme,plan,plan_status,plan_expires_at,team_owner_id FROM users WHERE email=?').bind(email).first();
-    if (!row || await H(password, row.salt) !== row.password_hash) return J({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' }, 401);
+    if (!row || await H(password, row.salt) !== row.password_hash) {
+      const count = Number(await e.STORE.get(rateKey) || 0) + 1;
+      await e.STORE.put(rateKey, String(count), { expirationTtl: 900 });
+      return J({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' }, 401);
+    }
+    await e.STORE.delete(rateKey);
     const token = id();
     await e.DB.prepare('INSERT INTO sessions(token,user_id,expires_at,created_at) VALUES(?,?,?,?)').bind(token, row.id, now() + SESSION_TTL * 1000, now()).run();
     return J({ ok: true, user: safeUser(row) }, 200, { 'set-cookie': sc('nxsession', token, SESSION_TTL) });
