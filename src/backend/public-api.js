@@ -34,6 +34,7 @@ async function handlePublicReadApi(p, m, r, e) {
       if (paid || freeIds.has(x.id)) return { ...x, locked: false, free_weekly: !paid };
       return { id: x.id, title: x.title, locked: true };
     });
+    if (!paid) jobs.sort((a, b) => Number(!!a.locked) - Number(!!b.locked));
     const c = await e.DB.prepare('SELECT id,title,provider,description,url FROM courses WHERE is_published=1 ORDER BY created_at DESC').all();
     const courses = (c.results || []).map((x, i) => paid ? ({ ...x, locked: false }) : i < 3 ? ({ ...x, locked: false }) : ({ id: x.id, title: x.title, locked: true }));
     const news = await e.DB.prepare('SELECT id,title,body,image_url,link_url FROM announcements WHERE is_published=1 ORDER BY created_at DESC').all();
